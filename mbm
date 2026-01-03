@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spreadsheet Data Visualizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Courier+Prime:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #faf9f7;
+            color: #262420;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+        }
+
+        .font-mono {
+            font-family: 'Courier Prime', monospace;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            height: 320px;
+            background: linear-gradient(135deg, #faf9f7 0%, #a8bba8 50%, #0d5f5f 100%);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            padding: 0 20px;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Main container */
+        .container {
+            display: flex;
+            min-height: calc(100vh - 320px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: #ffffff;
+            border-right: 1px solid #e8e6e2;
+            padding: 24px;
+            overflow-y: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar h2 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: #262420;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.75rem;
+            color: #8b8680;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #262420;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e8e6e2;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #0d5f5f;
+            box-shadow: 0 0 0 3px rgba(13, 95, 95, 0.1);
+        }
+
+        .stats-box {
+            background-color: rgba(13, 95, 95, 0.05);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            margin-bottom: 8px;
+        }
+
+        .stat-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            color: #8b8680;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #0d5f5f;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: #ffffff;
+            border: 1px solid #e8e6e2;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #262420;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .reset-btn:hover {
+            background-color: #f5f4f2;
+            border-color: #d4d0ca;
+        }
+
+        .reset-btn.hidden {
+            display: none;
+        }
+
+        .sidebar-info {
+            border-top: 1px solid #e8e6e2;
+            padding-top: 16px;
+            font-size: 0.75rem;
+            color: #8b8680;
+            line-height: 1.6;
+        }
+
+        .sidebar-info strong {
+            color: #262420;
+        }
+
+        /* Main content */
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            background-color: #faf9f7;
+        }
+
+        .timeline-header {
+            margin-bottom: 32px;
+        }
+
+        .timeline-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: #262420;
+        }
+
+        .timeline-header p {
+            font-size: 0.875rem;
+            color: #8b8680;
+        }
+
+        /* Loading state */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(13, 95, 95, 0.2);
+            border-top-color: #0d5f5f;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error state */
+        .error {
+            background-color: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            border-radius: 8px;
+            padding: 24px;
+            display: flex;
+            gap: 16px;
+        }
+
+        .error-icon {
+            color: #dc2626;
+            flex-shrink: 0;
+            font-weight: bold;
+        }
+
+        .error-content h3 {
+            color: #dc2626;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .error-content p {
+            font-size: 0.875rem;
+            color: rgba(220, 38, 38, 0.8);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            color: #8b8680;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p.subtitle {
+            font-size: 0.875rem;
+            color: #a8a29d;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+        }
+
+        .message-card {
+            position: relative;
+            padding-left: 32px;
+            padding-bottom: 32px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Timeline line */
+        .message-card::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #0d5f5f, rgba(13, 95, 95, 0.2));
+        }
+
+        /* Timeline dot */
+        .message-card::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 20px;
+            height: 20px;
+            background-color: #ffffff;
+            border: 2px solid #0d5f5f;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-content {
+            background-color: #ffffff;
+            border: 1px solid #e8e6e2;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .message-card:hover .message-content {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .message-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px;
+            justify-content: space-between;
+        }
+
+        .message-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .name-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            background-color: rgba(13, 95, 95, 0.1);
+            color: #0d5f5f;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .time-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background-color: #0d5f5f;
+            color: #ffffff;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .message-date {
+            font-size: 0.75rem;
+            color: #8b8680;
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .message-body {
+            font-size: 0.875rem;
+            color: #262420;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+
+        .message-body.empty {
+            font-size: 0.75rem;
+            color: #8b8680;
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e8e6e2;
+                max-height: auto;
+            }
+
+            .main-content {
+                padding: 24px;
+            }
+
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+
+            .hero p {
+                font-size: 0.95rem;
+            }
+
+            .message-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .message-date {
+                align-self: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="hero-content">
+            <h1>Spreadsheet Visualizer</h1>
+            <p>Explore and rearrange your data with interactive filtering and sorting</p>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>Explore Data</h2>
+            <p class="sidebar-subtitle" id="filterCount">Loading...</p>
+
+            <div class="form-group">
+                <label for="searchInput">Search Messages</label>
+                <input type="text" id="searchInput" placeholder="Find by content...">
+            </div>
+
+            <div class="form-group">
+                <label for="filterInput">Filter by Name</label>
+                <input type="text" id="filterInput" placeholder="Enter name...">
+            </div>
+
+            <div class="form-group">
+                <label for="sortSelect">Sort By</label>
+                <select id="sortSelect">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="name">By Name (A-Z)</option>
+                </select>
+            </div>
+
+            <div class="stats-box">
+                <div class="stat-row">
+                    <span class="stat-label">Showing:</span>
+                    <span class="stat-value" id="showingCount">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Total:</span>
+                    <span class="stat-value" id="totalCount">0</span>
+                </div>
+            </div>
+
+            <button class="reset-btn hidden" id="resetBtn">
+                <span>✕</span> Clear Filters
+            </button>
+
+            <div class="sidebar-info">
+                <p><strong>Tip:</strong> Use the search box to find messages by content, or filter by sender name.</p>
+                <p style="margin-top: 12px;">Messages are displayed in a timeline format for easy browsing.</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div id="content">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading spreadsheet data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let allData = [];
+        let searchQuery = '';
+        let filterName = '';
+        let sortBy = 'newest';
+
+        // DOM elements
+        const searchInput = document.getElementById('searchInput');
+        const filterInput = document.getElementById('filterInput');
+        const sortSelect = document.getElementById('sortSelect');
+        const resetBtn = document.getElementById('resetBtn');
+        const contentDiv = document.getElementById('content');
+        const filterCountSpan = document.getElementById('filterCount');
+        const showingCountSpan = document.getElementById('showingCount');
+        const totalCountSpan = document.getElementById('totalCount');
+
+        // Event listeners
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            updateDisplay();
+        });
+
+        filterInput.addEventListener('input', (e) => {
+            filterName = e.target.value;
+            updateDisplay();
+        });
+
+        sortSelect.addEventListener('change', (e) => {
+            sortBy = e.target.value;
+            updateDisplay();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            searchQuery = '';
+            filterName = '';
+            sortBy = 'newest';
+            searchInput.value = '';
+            filterInput.value = '';
+            sortSelect.value = 'newest';
+            updateDisplay();
+        });
+
+        // Fetch spreadsheet data
+        async function fetchData() {
+            try {
+                const response = await fetch(
+                    'https://docs.google.com/spreadsheets/d/13PWJ2TJqTCOXkT_jAAPNUH6s0Eyp9I1BI3UDn07wjvk/export?format=csv'
+                );
+
+                if (!response.ok) throw new Error('Failed to fetch data');
+
+                const csv = await response.text();
+                const rows = csv.trim().split('\n');
+
+                // Parse CSV data
+                allData = rows.slice(1).map(row => {
+                    const [timestamp, name, ...messageParts] = row.split(',');
+                    return {
+                        timestamp: timestamp?.trim() || '',
+                        name: name?.trim() || '',
+                        message: messageParts.join(',').trim() || '',
+                    };
+                }).filter(row => row.timestamp);
+
+                totalCountSpan.textContent = allData.length;
+                updateDisplay();
+            } catch (error) {
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        <div class="error-icon">⚠</div>
+                        <div class="error-content">
+                            <h3>Error Loading Data</h3>
+                            <p>${error.message}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Filter and sort data
+        function getFilteredData() {
+            let result = [...allData];
+
+            // Search filter
+            if (searchQuery) {
+                result = result.filter(row =>
+                    row.message.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+            }
+
+            // Name filter
+            if (filterName) {
+                result = result.filter(row =>
+                    row.name.toLowerCase().includes(filterName.toLowerCase())
+                );
+            }
+
+            // Sort
+            if (sortBy === 'newest') {
+                result.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            } else if (sortBy === 'oldest') {
+                result.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            } else if (sortBy === 'name') {
+                result.sort((a, b) => (a.name || 'Anonymous').localeCompare(b.name || 'Anonymous'));
+            }
+
+            return result;
+        }
+
+        // Parse timestamp
+        function parseTimestamp(ts) {
+            try {
+                const date = new Date(ts);
+                return {
+                    date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                    time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                };
+            } catch {
+                return { date: ts, time: '' };
+            }
+        }
+
+        // Render message card
+        function renderMessageCard(message) {
+            const { date, time } = parseTimestamp(message.timestamp);
+
+            return `
+                <div class="message-card">
+                    <div class="message-content">
+                        <div class="message-header">
+                            <div class="message-tags">
+                                <span class="name-tag">${message.name || 'Anonymous'}</span>
+                                <span class="time-badge">${time}</span>
+                            </div>
+                            <span class="message-date">${date}</span>
+                        </div>
+                        <div class="message-body ${!message.message ? 'empty' : ''}">
+                            ${message.message || '(No message content)'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Update display
+        function updateDisplay() {
+            const filteredData = getFilteredData();
+            const hasFilters = searchQuery || filterName || sortBy !== 'newest';
+
+            // Update counts
+            showingCountSpan.textContent = filteredData.length;
+            filterCountSpan.textContent = `Filter: ${filteredData.length} of ${allData.length} messages`;
+
+            // Update reset button visibility
+            resetBtn.classList.toggle('hidden', !hasFilters);
+
+            // Render content
+            if (filteredData.length === 0) {
+                contentDiv.innerHTML = `
+                    <div class="empty-state">
+                        <p>No messages found</p>
+                        <p class="subtitle">Try adjusting your filters or search query</p>
+                    </div>
+                `;
+            } else {
+                const timelineHtml = `
+                    <div class="timeline-header">
+                        <h2>Message Timeline</h2>
+                        <p>${filteredData.length} message${filteredData.length !== 1 ? 's' : ''} displayed</p>
+                    </div>
+                    <div class="timeline">
+                        ${filteredData.map(msg => renderMessageCard(msg)).join('')}
+                    </div>
+                `;
+                contentDiv.innerHTML = timelineHtml;
+            }
+        }
+
+        // Initialize
+        fetchData();
+    </script>
+</body>
+</html>
